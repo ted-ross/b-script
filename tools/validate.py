@@ -14,7 +14,7 @@ def main():
             else:
                 schema = json.load(schema_file)
     else:
-        schema = json_schema()
+        schema = meta_schema()
 
     # 2. Load and parse the YAML file
     with open(sys.argv[1], "r") as yaml_file:
@@ -27,7 +27,7 @@ def main():
     except ValidationError as e:
         print(f"Validation failed: {e.message}")
 
-def json_schema():
+def meta_schema():
     text = """
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",

@@ -1,0 +1,150 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+type: connector
+metadata:
+  name: std/tcp-connector
+  annotations:
+    platform: skupper
+spec:
+  configSchema:
+    type: object
+    properties:
+      keyPrefix:
+        type: string
+        description: "Prefix annotation for the generated routing keys"
+        default: tcp
+      distribution:
+        type: string
+        enum: [ balanced, closest ]
+        description: "Distribution algorithm used in the network for service traffic"
+        default: balanced
+      priority:
+        type: string
+        enum: [ lowest, "1", "2", "3", normal, "5", "6", "7", "8", "9", highest ]
+        description: "Priority used to forward service traffic through the network"
+        default: normal
+      protocol:
+        type: string
+        description: "Application protocol that runs over the transport"
+        default: none
+      connectorType:
+        type: string
+        enum: [ host, selector ]
+        description: "How the connector locates target processes"
+        default: selector
+      networkPolicyOnAcceptor:
+        type: boolean
+        description: "Generate network policy to match the acceptor"
+        default: false
+      networkPolicyOnConnector:
+        type: boolean
+        description: "Generate network policy to match the connector"
+        default: false
+      vanFlowTransport:
+        type: boolean
+        description: "Generate vanFlow transport events"
+        default: false
+      vanFlowProtocol:
+        type: boolean
+        description: "Generate vanFlow protocol events"
+        default: false
+      requiredAverageRate:
+        type: number
+        description: Expected average bandwidth usage
+      requiredPeakRate:
+        type: number
+        description: Expected peak bandwidth usage
+      requiredLatency:
+        type: number
+        description: Minimum expected network latency
+  interfaces:
+    acceptor:
+      role: accept
+    connector:
+      role: connect
+  body:
+    simple:
+    - name: acceptor.yaml
+      affinity: [acceptor]
+      targetPlatforms: [sk2]
+      description: "Interface to Skupper-v2 acceptors on kubernetes sites"
+      template: |
+        ---
+        apiVersion: skupper.io/v2alpha1
+        kind: Connector
+        metadata:
+          name: connector-{{.ident}}
+        spec:
+          type: tcp
+          selector: {{$affblock.selectorKey}}={{$affblock.selectorValue}}
+          port: {{$affif.port}}
+          routingKey: {{.keyPrefix}}{{.name}}
+        {{- if .networkPolicyOnAcceptor}}
+        ---
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: ingress-policy-{{.ident}}
+        spec:
+          podSelector:
+            matchLabels:
+              {{$affblock.selectorKey}} : {{$affblock.selectorValue}}
+          policyTypes:
+          - Ingress
+          ingress:
+          - from:
+            - podSelector:
+                matchLabels:
+                  skupper.io/component: router
+            ports:
+            - protocol: TCP
+              port: {{$affif.port}}
+        {{-end}}
+    - name: connector.yaml
+      affinity: [connector]
+      targetPlatforms: [sk2]
+      description: "Interface to Skupper-v2 connectors on kubernetes sites"
+      template: |
+        ---
+        apiVersion: skupper.io/v2alpha1
+        kind: Listener
+        metadata:
+          name: listener-{{.ident}}
+        spec:
+          type: tcp
+          host: {{$affif.host}}
+          port: {{$affif.port}}
+          routingKey: {{.keyPrefix}}{{.name}}
+        {{- if .networkPolicyOnConnector}}
+        ---
+        apiVersion: networking.k8s.io/v1
+        kind: NetworkPolicy
+        metadata:
+          name: egress-policy-{{.ident}}
+        spec:
+          podSelector:
+            matchLabels:
+              {{$affblock.selectorKey}} : {{$affblock.selectorValue}}
+          policyTypes:
+          - Egress
+          egress:
+          - to:
+            - podSelector:
+                matchLabels:
+                  skupper.io/component: router
+            ports:
+            - protocol: TCP
+              port: {{$affif.port}}
+        {{-end}}

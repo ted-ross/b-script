@@ -26,25 +26,24 @@ spec:
         host: nprime
         port: 8000
   body:
-    simple:
-      - name: ingress.yaml
-        affinity: [ connector ]
-        template: |
-          ---
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: {{.namePrefix}}-{{.ident}}
-          spec:
-            ingressClassName: nginx
-            rules:
-              - host: {{.serviceName}}
-                http:
-                  paths:
-                    - path: /
-                      pathType: Prefix
-                      backend:
-                        service:
-                          name: {{$localif.connector.host}}
-                          port:
-                            number: {{$localif.connector.port}}
+    - name: ingress.yaml
+      affinity: [ connector ]
+      template: |
+        ---
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: {{.namePrefix}}-{{.ident}}
+        spec:
+          ingressClassName: nginx
+          rules:
+            - host: {{.serviceName}}
+              http:
+                paths:
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                      service:
+                        name: {{$localif.connector.host}}
+                        port:
+                          number: {{$localif.connector.port}}

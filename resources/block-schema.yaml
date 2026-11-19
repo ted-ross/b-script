@@ -30,7 +30,9 @@ properties:
         type: string
   spec:
     type: object
-    required: [ body ]
+    oneOf:
+      - required: [ body ]
+      - required: [ composite ]
     additionalProperties: false
     properties:
       configSchema:
@@ -52,58 +54,53 @@ properties:
               description: The schema for the interface's configuration, including default values.
               $ref: "https://json-schema.org/draft/2020-12/schema"
       body:
+        type: array
+        items:
+          type: object
+          required: [ name, template ]
+          additionalProperties: false
+          properties:
+            name:
+              type: string
+            affinity:
+              type: array
+              items:
+                type: string
+            description:
+              type: string
+            template:
+              type: string
+      composite:
         type: object
-        oneOf:
-          - required: [ simple ]
-          - required: [ composite ]
-        additionalProperties: false
-        properties:
-          simple:
-            type: array
-            items:
+        additionalProperties:
+          type: object
+          required: [ block ]
+          additionalProperties: false
+          properties:
+            block:
+              type: string
+              description: The identifier of the instantiated block
+            config:
               type: object
-              properties:
-                name:
-                  type: string
-                affinity:
-                  type: array
-                  items:
+              description: Instance of the block's configuration schema
+            labels:
+              type: object
+            bindings:
+              type: object
+              additionalProperties:
+                description: The binding key is the name of an interface on the instantiated block
+                type: object
+                oneOf:
+                  - required: [ block, interface ]
+                  - required: [ super ]
+                additionalProperties: false
+                properties:
+                  block:
                     type: string
-                description:
-                  type: string
-                template:
-                  type: string
-          composite:
-            type: object
-            additionalProperties:
-              type: object
-              required: [ block ]
-              additionalProperties: false
-              properties:
-                block:
-                  type: string
-                  description: The identifier of the instantiated block
-                config:
-                  type: object
-                  description: Instance of the block's configuration schema
-                labels:
-                  type: object
-                bindings:
-                  type: object
-                  additionalProperties:
-                    description: The binding key is the name of an interface on the instantiated block
-                    type: object
-                    oneOf:
-                      - required: [ block, interface ]
-                      - required: [ super ]
-                    additionalProperties: false
-                    properties:
-                      block:
-                        type: string
-                        description: The name of the block in this composite
-                      interface:
-                        type: string
-                        description: The name of an interface on the specified block
-                      super:
-                        type: string
-                        description: The name of an interface of this composite block
+                    description: The name of the block in this composite
+                  interface:
+                    type: string
+                    description: The name of an interface on the specified block
+                  super:
+                    type: string
+                    description: The name of an interface of this composite block

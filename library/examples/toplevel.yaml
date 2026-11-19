@@ -16,27 +16,26 @@ metadata:
   name: nearestprime/container
 type: toplevel
 spec:
-  body:
-    composite:
-      mainApp:
-        block: nearestprime/main
-        labels:
-          class: hq
-      requestIngress:
-        block: nearestprime/ingress
-        labels:
-          class: hq
-      request-ingress-to-main:
-        block: library/tcp-connection
-        config:
-          keyPrefix: http-ingress
-          protocol: http
-          connectorType: selector
-          networkPolicyOnConnector: false
-        bindings:
-          acceptor:
-            block: mainApp
-            interface: request
-          connector:
-            block: requestIngress
-            interface: connector
+  composite:
+    mainApp:
+      block: nearestprime/main
+      labels:
+        class: hq
+    requestIngress:
+      block: nearestprime/ingress
+      labels:
+        class: hq
+    request-ingress-to-main:
+      block: library/tcp-connection
+      config:
+        keyPrefix: http-ingress
+        protocol: http
+        connectorType: selector
+        networkPolicyOnConnector: false
+      bindings:
+        acceptor:
+          block: mainApp
+          interface: request
+        connector:
+          block: requestIngress
+          interface: connector

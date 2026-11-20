@@ -75,76 +75,73 @@ spec:
     connector:
       role: connect
   body:
-    simple:
-    - name: acceptor.yaml
-      affinity: [acceptor]
-      targetPlatforms: [sk2]
-      description: "Interface to Skupper-v2 acceptors on kubernetes sites"
-      template: |
-        ---
-        apiVersion: skupper.io/v2alpha1
-        kind: Connector
-        metadata:
-          name: connector-{{.ident}}
-        spec:
-          type: tcp
-          selector: {{$affblock.selectorKey}}={{$affblock.selectorValue}}
-          port: {{$affif.port}}
-          routingKey: {{.keyPrefix}}{{.name}}
-        {{- if .networkPolicyOnAcceptor}}
-        ---
-        apiVersion: networking.k8s.io/v1
-        kind: NetworkPolicy
-        metadata:
-          name: ingress-policy-{{.ident}}
-        spec:
-          podSelector:
-            matchLabels:
-              {{$affblock.selectorKey}} : {{$affblock.selectorValue}}
-          policyTypes:
-          - Ingress
-          ingress:
-          - from:
-            - podSelector:
-                matchLabels:
-                  skupper.io/component: router
-            ports:
-            - protocol: TCP
-              port: {{$affif.port}}
-        {{-end}}
-    - name: connector.yaml
-      affinity: [connector]
-      targetPlatforms: [sk2]
-      description: "Interface to Skupper-v2 connectors on kubernetes sites"
-      template: |
-        ---
-        apiVersion: skupper.io/v2alpha1
-        kind: Listener
-        metadata:
-          name: listener-{{.ident}}
-        spec:
-          type: tcp
-          host: {{$affif.host}}
-          port: {{$affif.port}}
-          routingKey: {{.keyPrefix}}{{.name}}
-        {{- if .networkPolicyOnConnector}}
-        ---
-        apiVersion: networking.k8s.io/v1
-        kind: NetworkPolicy
-        metadata:
-          name: egress-policy-{{.ident}}
-        spec:
-          podSelector:
-            matchLabels:
-              {{$affblock.selectorKey}} : {{$affblock.selectorValue}}
-          policyTypes:
-          - Egress
-          egress:
-          - to:
-            - podSelector:
-                matchLabels:
-                  skupper.io/component: router
-            ports:
-            - protocol: TCP
-              port: {{$affif.port}}
-        {{-end}}
+  - name: acceptor.yaml
+    affinity: [ acceptor ]
+    description: "Interface to Skupper-v2 acceptors on kubernetes sites"
+    template: |
+      ---
+      apiVersion: skupper.io/v2alpha1
+      kind: Connector
+      metadata:
+        name: connector-{{.ident}}
+      spec:
+        type: tcp
+        selector: {{$affblock.selectorKey}}={{$affblock.selectorValue}}
+        port: {{$affif.port}}
+        routingKey: {{.keyPrefix}}{{.name}}
+      {{- if .networkPolicyOnAcceptor}}
+      ---
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: ingress-policy-{{.ident}}
+      spec:
+        podSelector:
+          matchLabels:
+            {{$affblock.selectorKey}} : {{$affblock.selectorValue}}
+        policyTypes:
+        - Ingress
+        ingress:
+        - from:
+          - podSelector:
+              matchLabels:
+                skupper.io/component: router
+          ports:
+          - protocol: TCP
+            port: {{$affif.port}}
+      {{-end}}
+  - name: connector.yaml
+    affinity: [ connector ]
+    description: "Interface to Skupper-v2 connectors on kubernetes sites"
+    template: |
+      ---
+      apiVersion: skupper.io/v2alpha1
+      kind: Listener
+      metadata:
+        name: listener-{{.ident}}
+      spec:
+        type: tcp
+        host: {{$affif.host}}
+        port: {{$affif.port}}
+        routingKey: {{.keyPrefix}}{{.name}}
+      {{- if .networkPolicyOnConnector}}
+      ---
+      apiVersion: networking.k8s.io/v1
+      kind: NetworkPolicy
+      metadata:
+        name: egress-policy-{{.ident}}
+      spec:
+        podSelector:
+          matchLabels:
+            {{$affblock.selectorKey}} : {{$affblock.selectorValue}}
+        policyTypes:
+        - Egress
+        egress:
+        - to:
+          - podSelector:
+              matchLabels:
+                skupper.io/component: router
+          ports:
+          - protocol: TCP
+            port: {{$affif.port}}
+      {{-end}}

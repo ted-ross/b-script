@@ -8,16 +8,18 @@ import sys
 def main():
     # 1. Load the JSON Schema
     if len(sys.argv) == 3:
-        with open(sys.argv[2], "r") as schema_file:
-            if sys.argv[2].lower().endswith(".yaml"):
+        target_arg = 2
+        with open(sys.argv[1], "r") as schema_file:
+            if sys.argv[1].lower().endswith(".yaml"):
                 schema = yaml.safe_load(schema_file)
             else:
                 schema = json.load(schema_file)
     else:
+        target_arg = 1
         schema = meta_schema()
 
     # 2. Load and parse the YAML file
-    with open(sys.argv[1], "r") as yaml_file:
+    with open(sys.argv[target_arg], "r") as yaml_file:
         yaml_data = yaml.safe_load(yaml_file)
 
     # 3. Validate
